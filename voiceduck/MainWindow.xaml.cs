@@ -23,6 +23,8 @@ namespace voiceduck
         public MainWindow()
         {
             InitializeComponent();
+            VNDB _db = new VNDB();
+            _db.GetVoice(1);
         }
     }
 }
