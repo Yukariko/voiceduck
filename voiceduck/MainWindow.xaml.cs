@@ -24,7 +24,33 @@ namespace voiceduck
         {
             InitializeComponent();
             VNDB _db = new VNDB();
-            _db.GetVoice(1);
+            Voice voice = _db.GetVoice(5);
+
+            List<string> items = new List<string>();
+
+            VoiceListBox.Items.Add(voice.names[0].Text);
+
+            for(int i=0; i < voice.vns.Count; i++)
+            {
+                items.Add("[" + voice.vns[i].date + "] " + voice.characters[i].name.Text + " - " + voice.vns[i].name.Text);
+            }
+
+            VNListBox.ItemsSource = items;
+        }
+
+        private void VoiceListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+
+        }
+
+        private void VNListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void VNListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+
         }
     }
 }
