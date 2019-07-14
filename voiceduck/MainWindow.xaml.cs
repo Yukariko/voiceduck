@@ -32,7 +32,7 @@ namespace voiceduck
         public MainWindow()
         {
             InitializeComponent();
-            foreach (var voice in _db.voices)
+            foreach (var voice in VNDB.voices)
             {
                 Run(voice.Key, voice.Value);
             }
@@ -53,7 +53,7 @@ namespace voiceduck
             {
                 if (nickname != "")
                     voice.Nickname = nickname;
-                
+                VNDB.voices[id] = voice.Nickname;
                 if (update)
                     _db.Update();
                 VoiceListBox.Items.Add(voice);
@@ -109,16 +109,17 @@ namespace voiceduck
             if (win.TextBox.Text.Length > 0)
             {
                 voice.Nickname = win.TextBox.Text;
+                VNDB.voices[voice.id] = voice.Nickname;
                 _db.Update();
             }
         }
 
-        async private void FindVNBox_KeyDown(object sender, KeyEventArgs e)
+        private async void FindVNBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
             {
                 string text = FindVNBox.Text;
-                FindVNBox.Text = "";
+                //FindVNBox.Text = "";
                 VNListBox2.ItemsSource = await _db.GetVNSearch(text);
             }
 
@@ -129,14 +130,37 @@ namespace voiceduck
 
         }
 
-        private void VNListBox2_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void VNListBox2_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            VN vn = (VN)VNListBox2.SelectedItem;
+            if (vn == null)
+                return;
+            if (vn.characters.Count == 0)
+                await _db.GetMoreVNInfo(vn);
+            CharacterListBox.ItemsSource = null;
+            CharacterListBox.ItemsSource = vn.characters;
+            VNImage.Source = loadingImage;
+            VNImage.Source = await _db.GetVNImage(vn.id, vn.image);
+            VNInfoListBox.Items.Clear();
+            VNInfoListBox.Items.Add(vn.name.japName);
+            VNInfoListBox.Items.Add(vn.name.engName);
+            VNInfoListBox.Items.Add(vn.playTIme);
+            VNInfoListBox.Items.Add(vn.developer);
         }
 
         private void VNListBox2_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
 
+        }
+
+        private void CharacterListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            Character character = (Character)CharacterListBox.SelectedItem;
+            if (character == null)
+                return;
+            if (character.voice == null)
+                return;
+            Run(character.voice.id, "", true);
         }
     }
 }

@@ -25,10 +25,17 @@ namespace voiceduck
     public class VNDB
     {
         private readonly string dbPath = System.IO.Directory.GetCurrentDirectory() + @"\db.txt";
-        public Dictionary<int, string> voices = new Dictionary<int, string>();
+        public static Dictionary<int, string> voices = new Dictionary<int, string>();
   
         public VNDB()
         {
+            DirectoryInfo dir = new DirectoryInfo(System.IO.Directory.GetCurrentDirectory() + @"\cache");
+            if (!dir.Exists)
+                dir.Create();
+            if (!File.Exists(@"db.txt"))
+            {
+                File.Create(@"db.txt");
+            }
             Init();
         }
 
@@ -198,24 +205,27 @@ namespace voiceduck
             }
         }
         
-        async public Task<List<string>> GetVNSearch(string searchString)
+        async public Task<List<VN>> GetVNSearch(string searchString)
         {
-            List<string> result = new List<string>();
-            string url = "https://vndb.org/v/all?q=" + searchString;
+            List<VN> result = new List<VN>();
+            string url = "https://vndb.org/v/all?sq=" + searchString;
 
             try
             {
                 var web = new HtmlAgilityPack.HtmlWeb();
+                web.CaptureRedirect = true;
+
                 HtmlDocument doc = await web.LoadFromWebAsync(url);
                 var searchList = doc.DocumentNode.SelectNodes("//table[@class='stripe']/tr");
 
                 foreach (var search in searchList)
                 {
                     string id = search.SelectSingleNode("./td[@class='tc1']/a").GetAttributeValue("href", "");
-                    string title = search.SelectSingleNode("./td[@class='tc1']").InnerText;
+                    string japName = search.SelectSingleNode("./td[@class='tc1']/a").GetAttributeValue("title", "");
+                    string engName = search.SelectSingleNode("./td[@class='tc1']").InnerText;
                     string date = search.SelectSingleNode("./td[@class='tc4']").InnerText;
-                    Console.WriteLine("[" + date + "] " + title);
-                    result.Add("[" + date + "] " + title + " " + id);
+                    VN vn = new VN(ExtractId(id), new Name(engName, japName), date);
+                    result.Add(vn);
                 }
 
             }
@@ -226,7 +236,97 @@ namespace voiceduck
 
             return result;
         }
-            
+        
+        public async Task<VN> GetMoreVNInfo(VN vn)
+        {
+            string url = "https://vndb.org/v" + vn.id;
+
+            try
+            {
+                var web = new HtmlAgilityPack.HtmlWeb();
+                HtmlDocument doc = await web.LoadFromWebAsync(url);
+
+                var details = doc.DocumentNode.SelectNodes("//div[@class='vndetails']/table/tr");
+                foreach (var detail in details)
+                {
+                    var key = detail.SelectSingleNode("./td").InnerText;
+                    if (key == "Length")
+                        vn.playTIme = detail.SelectNodes("./td")[1].InnerText;
+                    else if (key == "Developer")
+                        vn.developer = detail.SelectNodes("./td")[1].InnerText;
+                }
+
+                var imagePath = doc.DocumentNode.SelectSingleNode("//div[@class='vnimg']//img");
+                if (imagePath != null)
+                {
+                    vn.image = imagePath.GetAttributeValue("src", "");
+                }
+
+                var characterList = doc.DocumentNode.SelectNodes("//div[contains(@class,'charsum_bubble')]");
+                foreach (var character in characterList)
+                {
+                    int id = ExtractId(character.SelectSingleNode("./div[@class='name']/a").GetAttributeValue("href", ""));
+                    string engName = character.SelectSingleNode("./div[@class='name']/a").InnerText;
+                    string japName = character.SelectSingleNode("./div[@class='name']/a").GetAttributeValue("title", "");
+
+                    Character _character = new Character(id, new Name(engName, japName));
+
+                    if (character.SelectSingleNode("./div[@class='actor']") != null)
+                    {
+                        int voiceId = ExtractId(character.SelectSingleNode("./div[@class='actor']/a").GetAttributeValue("href", ""));
+                        string voiceJapName = character.SelectSingleNode("./div[@class='actor']/a").GetAttributeValue("title", "");
+                        string voiceEngName = character.SelectSingleNode("./div[@class='actor']/a").InnerText;
+                        _character.voice = new Voice(voiceId, new Name(voiceEngName, voiceJapName));
+                        if (voices.ContainsKey(voiceId))
+                            _character.voice.Nickname = voices[voiceId];
+                    }
+
+
+
+                    vn.characters.Add(_character);
+                }
+
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            return vn;
+        }
+        async public Task<BitmapImage> GetVNImage(int id, string url)
+        {
+            var bitmapImage = new BitmapImage();
+            string localImagePath = CreateCachePath(id, 0);
+            try
+            {
+                if (!File.Exists(localImagePath))
+                {
+                    if (url == null)
+                        return null;
+
+                    WebClient webClient = new WebClient();
+                    webClient.DownloadFile(new Uri(url), localImagePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+            try
+            {
+                bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.UriSource = new Uri(localImagePath);
+                bitmapImage.EndInit();
+                return bitmapImage;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
+        }
 
         public void Update()
         {
@@ -251,9 +351,11 @@ namespace voiceduck
         {
             get
             {
-                if (nickname == null)
-                    return names[0].Text;
-                return nickname;
+                if (nickname != null)
+                    return nickname;
+                if (VNDB.voices.ContainsKey(id))
+                    return VNDB.voices[id];
+                return names[0].Text;
             }
             set
             {
@@ -272,6 +374,12 @@ namespace voiceduck
         public Voice(int id)
         {
             this.id = id;
+        }
+
+        public Voice(int id, Name name)
+        {
+            this.id = id;
+            names.Add(name);
         }
 
         public void PushName(Name name)
@@ -326,11 +434,15 @@ namespace voiceduck
         public readonly int id;
         public readonly Name name;
         public readonly string date;
+        public string image;
+        public string playTIme;
+        public string developer;
         private string color;
         public string Color { get { return color; } set { color = value; OnPropertyChanged("Color"); } }
 
         public string Text { get { return "[" + date + "] " + characters[0].name.Text + " - " + name.Text; } }
         
+        public string SearchName { get { return "[" + date + "] " + name.engName; } }
 
         private bool seen = false;
         public List<Character> characters = new List<Character>();
@@ -363,7 +475,18 @@ namespace voiceduck
     {
         public readonly int id;
         public readonly Name name;
-        
+        public Voice voice;
+
+        public string Text
+        {
+            get
+            {
+                string res = name.japName + "(" + name.engName + ")";
+                if (voice != null)
+                    return res + " -" + voice.Nickname;
+                return res;
+            }
+        }
         public Character(int id, Name name)
         {
             this.id = id;
@@ -381,7 +504,7 @@ namespace voiceduck
         public readonly string engName; 
         public readonly string japName;
         public string Text { get { return japName + "(" + engName + ")"; } }
-
+        
         public Name(string engName, string japName)
         {
             this.engName = engName;
