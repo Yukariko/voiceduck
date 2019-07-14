@@ -5,51 +5,96 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:voiceduck"
         mc:Ignorable="d"
-        Title="VoiceDuck" Height="500" Width="1000">
-    <Grid RenderTransformOrigin="0.5,0.524">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="180"/>
-            <ColumnDefinition Width="600"/>
-            <ColumnDefinition Width="400"/>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition />
-            <RowDefinition Height="250"/>
-        </Grid.RowDefinitions>
-        <Border Grid.Column="0" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
-            <Label VerticalAlignment="Center" Foreground="White">성우 목록</Label>
-        </Border>
-        <Border Grid.Column="1" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
-            <Label VerticalAlignment="Center" Foreground="White">작품 목록</Label>
-        </Border>
-        <Border Grid.Column="2" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
-            <Label VerticalAlignment="Center" Foreground="White">캐릭터 목록</Label>
-        </Border>
-        <ListBox Name="VoiceListBox" Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" MouseDoubleClick="VoiceListBox_MouseDoubleClick">
-            <!--<ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding title}" />
-                </DataTemplate>
-            </ListBox.ItemTemplate>-->
-        </ListBox>
-        <ListBox Name="VNListBox" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2"  SelectionChanged="VNListBox_SelectionChanged"  KeyDown="VNListBox_KeyDown">
-            <!--<ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Grid Margin="0,2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="20" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Ellipse Grid.Column="0" Width="10" Height="10" Fill="{Binding color}"/>
-                        <TextBlock Grid.Column="1" />
-                    </Grid>
-                </DataTemplate>
-            </ListBox.ItemTemplate>-->
-        </ListBox>
-        <ListBox Name="TorrentListBox" Grid.Column="2" Grid.Row="1" >
-        </ListBox>
-        <ListBox Name="SubtitleListBox" Grid.Column="2" Grid.Row="2" >
-        </ListBox>
-    </Grid>
+        Title="VoiceDuck" Height="500" Width="1180">
+    
+        <TabControl>
+
+            <TabItem Header="성우">
+
+            <Grid RenderTransformOrigin="0.5,0.524">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="600"/>
+                    <ColumnDefinition Width="400"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition />
+                    <RowDefinition Height="200"/>
+                </Grid.RowDefinitions>
+                <Border Grid.Column="0" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
+                    <Label VerticalAlignment="Center" Foreground="White">성우 목록</Label>
+                </Border>
+                <Border Grid.Column="1" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
+                    <Label VerticalAlignment="Center" Foreground="White">작품 목록</Label>
+                </Border>
+                <Border Grid.Column="2" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
+                    <Label VerticalAlignment="Center" Foreground="White">캐릭터 프로필</Label>
+                </Border>
+                <TextBox Name="FindVoiceBox" Grid.Column="0" Grid.Row="1" KeyDown="FindVoiceBox_KeyDown">
+
+                </TextBox>
+                <ListBox Name="VoiceListBox" Grid.Column="0" Grid.Row="2" Grid.RowSpan="2" SelectionChanged="VoiceListBox_SelectionChanged" MouseDoubleClick="VoiceListBox_MouseDoubleClick">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Nickname}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <ListBox Name="VNListBox" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3"  SelectionChanged="VNListBox_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Ellipse Grid.Column="0" Width="10" Height="10" Fill="{Binding Color}"/>
+                                <TextBlock Grid.Column="1" Text="{Binding Text}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Image Name="CharacterImage" Grid.Column="2" Grid.Row="1" Grid.RowSpan="2">
+                    <Image.Source>
+                        <BitmapImage DecodePixelWidth="100"  UriSource="" />
+                    </Image.Source>
+                </Image>
+                <ListBox Name="CharacterInfoListBox" Grid.Column="2" Grid.Row="3" >
+                </ListBox>
+
+            </Grid>
+        </TabItem>
+        <TabItem Header="작품">
+            <Grid RenderTransformOrigin="0.5,0.524">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="600"/>
+                    <ColumnDefinition Width="400"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition />
+                    <RowDefinition Height="200"/>
+                </Grid.RowDefinitions>
+                <Border Grid.Column="0" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
+                    <Label VerticalAlignment="Center" Foreground="White">작품 목록</Label>
+                </Border>
+                <Border Grid.Column="1" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
+                    <Label VerticalAlignment="Center" Foreground="White">캐릭터 목록</Label>
+                </Border>
+                <Border Grid.Column="2" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
+                    <Label VerticalAlignment="Center" Foreground="White">작품 정보</Label>
+                </Border>
+                <TextBox Name="FindVNBox" Grid.Column="0" Grid.Row="1" KeyDown="FindVNBox_KeyDown">
+                        
+                </TextBox>
+                <ListBox Name="VNListBox2" Grid.Column="0" Grid.Row="2" Grid.RowSpan="2" SelectionChanged="VNListBox2_SelectionChanged"  MouseDoubleClick="VNListBox2_MouseDoubleClick">
+                    
+                </ListBox>
+            </Grid>
+        </TabItem>
+    </TabControl>
 </Window>
