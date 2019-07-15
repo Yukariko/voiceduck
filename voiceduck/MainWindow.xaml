@@ -13,9 +13,11 @@
 
             <Grid RenderTransformOrigin="0.5,0.524">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="180"/>
-                    <ColumnDefinition Width="600"/>
-                    <ColumnDefinition Width="400"/>
+                    <ColumnDefinition Width="180*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="590*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="400*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -26,10 +28,33 @@
                 <Border Grid.Column="0" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
                     <Label VerticalAlignment="Center" Foreground="White">성우 목록</Label>
                 </Border>
-                <Border Grid.Column="1" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
+
+                <GridSplitter Grid.Column="1" Grid.Row="0" Grid.RowSpan="4"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  Background="White" 
+                  ShowsPreview="True"
+                  Width="1"
+                 />
+                <GridSplitter Grid.Column="3" Grid.Row="0" Grid.RowSpan="4"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  Background="White" 
+                  ShowsPreview="True"
+                  Width="1"
+                 />
+
+
+                <Border Grid.Column="2" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
                     <Label VerticalAlignment="Center" Foreground="White">작품 목록</Label>
                 </Border>
-                <Border Grid.Column="2" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
+                <ComboBox Name="NameOption" SelectedValuePath="Tag" Grid.Column="2" Grid.Row="0" HorizontalAlignment="Right" Height="25" SelectionChanged="ComboBox_SelectionChanged">
+                    <ComboBoxItem Tag="0">일본어</ComboBoxItem>
+                    <ComboBoxItem Tag="1">영어</ComboBoxItem>
+                    <ComboBoxItem Tag="2">모두</ComboBoxItem>
+                </ComboBox>
+
+                <Border Grid.Column="4" Height="35" Padding="5" Background="#4E87D4">
                     <Label VerticalAlignment="Center" Foreground="White">캐릭터 프로필</Label>
                 </Border>
                 <TextBox Name="FindVoiceBox" Grid.Column="0" Grid.Row="1" KeyDown="FindVoiceBox_KeyDown">
@@ -42,7 +67,8 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <ListBox Name="VNListBox" Grid.Column="1" Grid.Row="1" Grid.RowSpan="3"  SelectionChanged="VNListBox_SelectionChanged">
+                
+                <ListBox Name="VNListBox" Grid.Column="2" Grid.Row="1" Grid.RowSpan="3"  SelectionChanged="VNListBox_SelectionChanged">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="0,2">
@@ -56,12 +82,17 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <Image Name="CharacterImage" Grid.Column="2" Grid.Row="1" Grid.RowSpan="2">
+                <Image Name="CharacterImage" Grid.Column="4" Grid.Row="1" Grid.RowSpan="2">
                     <Image.Source>
                         <BitmapImage DecodePixelWidth="400"  UriSource="" />
                     </Image.Source>
                 </Image>
-                <ListBox Name="CharacterInfoListBox" Grid.Column="2" Grid.Row="3" >
+                <ListBox Name="CharacterInfoListBox" Grid.Column="4" Grid.Row="3" >
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Text}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
                 </ListBox>
 
             </Grid>
@@ -69,9 +100,11 @@
         <TabItem Header="작품">
             <Grid RenderTransformOrigin="0.5,0.524">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="400"/>
-                    <ColumnDefinition Width="400"/>
-                    <ColumnDefinition Width="360"/>
+                    <ColumnDefinition Width="400*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="400*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="360*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -79,13 +112,29 @@
                     <RowDefinition />
                     <RowDefinition Height="200"/>
                 </Grid.RowDefinitions>
+
+                <GridSplitter Grid.Column="1" Grid.Row="0" Grid.RowSpan="4"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  Background="White" 
+                  ShowsPreview="True"
+                  Width="1"
+                 />
+                <GridSplitter Grid.Column="3" Grid.Row="0" Grid.RowSpan="4"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  Background="White" 
+                  ShowsPreview="True"
+                  Width="1"
+                 />
+
                 <Border Grid.Column="0" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
                     <Label VerticalAlignment="Center" Foreground="White">작품 목록</Label>
                 </Border>
-                <Border Grid.Column="1" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
+                <Border Grid.Column="2" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
                     <Label VerticalAlignment="Center" Foreground="White">작품 정보</Label>
                 </Border>
-                <Border Grid.Column="2" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
+                <Border Grid.Column="4" Grid.Row="0" Height="35" Padding="5" Background="#4E87D4">
                     <Label VerticalAlignment="Center" Foreground="White">캐릭터 목록</Label>
                 </Border>
                 <TextBox Name="FindVNBox" Grid.Column="0" Grid.Row="1" KeyDown="FindVNBox_KeyDown">
@@ -98,15 +147,15 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <Image Name="VNImage" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2">
+                <Image Name="VNImage" Grid.Column="2" Grid.Row="1" Grid.RowSpan="2">
                     <Image.Source>
                         <BitmapImage DecodePixelWidth="400"  UriSource="" />
                     </Image.Source>
                 </Image>
-                <ListBox Name="VNInfoListBox" Grid.Column="1" Grid.Row="3" >
+                <ListBox Name="VNInfoListBox" Grid.Column="2" Grid.Row="3" >
                 </ListBox>
                 
-                <ListBox Name="CharacterListBox" Grid.Column="2" Grid.Row="1" Grid.RowSpan="3" SelectionChanged="CharacterListBox_SelectionChanged"  MouseDoubleClick="CharacterListBox_MouseDoubleClick">
+                <ListBox Name="CharacterListBox" Grid.Column="4" Grid.Row="1" Grid.RowSpan="3" SelectionChanged="CharacterListBox_SelectionChanged"  MouseDoubleClick="CharacterListBox_MouseDoubleClick">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Text}" />

@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.Windows.Media.Imaging;
 using System.Net;
 using System.IO;
+using System.Threading;
 
 namespace voiceduck
 {
@@ -25,7 +26,10 @@ namespace voiceduck
     public class VNDB
     {
         private readonly string dbPath = System.IO.Directory.GetCurrentDirectory() + @"\db.txt";
+        private readonly string logPath = System.IO.Directory.GetCurrentDirectory() + @"\log.txt";
         public static Dictionary<int, string> voices = new Dictionary<int, string>();
+        public static string viewMode = "one";
+        public static SemaphoreSlim sem = new SemaphoreSlim(5, 5);
   
         public VNDB()
         {
@@ -33,9 +37,10 @@ namespace voiceduck
             if (!dir.Exists)
                 dir.Create();
             if (!File.Exists(@"db.txt"))
-            {
                 File.Create(@"db.txt");
-            }
+            if (!File.Exists(@"log.txt"))
+                File.Create(@"log.txt");
+
             Init();
         }
 
@@ -58,6 +63,9 @@ namespace voiceduck
                     string nickname = tokens[1];
                     voices[id] = nickname;
                 }
+                string option = file.ReadLine();
+                if (option != null)
+                    int.TryParse(option, out Name.option);
             }
         }
 
@@ -79,7 +87,7 @@ namespace voiceduck
         {
             Voice voice = new Voice(id);
             string url = "https://vndb.org/s" + id;
-
+            await VNDB.sem.WaitAsync();
             try
             {
                 var web = new HtmlAgilityPack.HtmlWeb();
@@ -95,7 +103,7 @@ namespace voiceduck
                 Name name = new Name(engName, japName);
                 voice.PushName(name);
 
-                var aliases = profile.SelectNodes(".//tr[@class='nostripe']");
+                /*var aliases = profile.SelectNodes(".//tr[@class='nostripe']");
 
                 foreach (var alias in aliases)
                 {
@@ -104,7 +112,8 @@ namespace voiceduck
                     japName = elem[1].InnerText;
                     name = new Name(engName, japName);
                     voice.PushName(name);
-                }
+                }*/
+                
 
                 var vns = doc.DocumentNode.SelectNodes("//div[@class='mainbox browse staffroles']/table/tr");
                 foreach (var vn in vns)
@@ -143,30 +152,34 @@ namespace voiceduck
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                return null;
+                AddLog(e.Message);
+                
+                VNDB.sem.Release();
+                await Task.Delay(1000);
+                return await GetVoice(id);
             }
-
+            VNDB.sem.Release();
             return voice;
         }
 
         async public Task<string> GetCharacterImageSrc(int id)
         {
             string url = "http://vndb.org/c" + id;
-
+            await VNDB.sem.WaitAsync();
             //            try
             {
                 var web = new HtmlAgilityPack.HtmlWeb();
                 HtmlDocument doc = await web.LoadFromWebAsync(url);
-
+                VNDB.sem.Release();
                 var profile = doc.DocumentNode.SelectSingleNode("//div[@class='charimg']/img");
                 if (profile == null)
                     return null;
 
+                
                 string src = profile.GetAttributeValue("src", "");
                 return src;
             }
-
+            
             return null;
         }
 
@@ -209,7 +222,7 @@ namespace voiceduck
         {
             List<VN> result = new List<VN>();
             string url = "https://vndb.org/v/all?sq=" + searchString;
-
+            //await VNDB.sem.WaitAsync();
             try
             {
                 var web = new HtmlAgilityPack.HtmlWeb();
@@ -233,14 +246,14 @@ namespace voiceduck
             {
 
             }
-
+            //VNDB.sem.Release();
             return result;
         }
         
         public async Task<VN> GetMoreVNInfo(VN vn)
         {
             string url = "https://vndb.org/v" + vn.id;
-
+            await VNDB.sem.WaitAsync();
             try
             {
                 var web = new HtmlAgilityPack.HtmlWeb();
@@ -291,7 +304,7 @@ namespace voiceduck
             {
 
             }
-
+            VNDB.sem.Release();
             return vn;
         }
         async public Task<BitmapImage> GetVNImage(int id, string url)
@@ -337,6 +350,16 @@ namespace voiceduck
                 {
                     file.WriteLine(voice.Key + " " + voice.Value);
                 }
+                file.WriteLine(Name.option);
+                file.Close();
+            }
+        }
+        public void AddLog(string error)
+        {
+            using (System.IO.StreamWriter file = new System.IO.StreamWriter(logPath, true))
+            {
+                
+                file.WriteLine(DateTime.Now.ToString() + " " + error);
                 file.Close();
             }
         }
@@ -440,7 +463,15 @@ namespace voiceduck
         private string color;
         public string Color { get { return color; } set { color = value; OnPropertyChanged("Color"); } }
 
-        public string Text { get { return "[" + date + "] " + characters[0].name.Text + " - " + name.Text; } }
+        public string Text
+        {
+            get
+            {
+                if (VNDB.viewMode == "one")
+                    return "[" + date + "] " + characters[0].name.Text + " - " + name.Text;
+                return "[" + date + "] " + name.Text;
+            }
+        }
         
         public string SearchName { get { return "[" + date + "] " + name.engName; } }
 
@@ -460,7 +491,7 @@ namespace voiceduck
 
         public void Print()
         {
-            Console.WriteLine("[" + id + "] " + name.japName + "(" + name.engName + ") - " + date);
+            Console.WriteLine("[" + id + "] " + name.Text + " - " + date);
         }
 
         protected void OnPropertyChanged(string propertyName)
@@ -499,12 +530,27 @@ namespace voiceduck
         }
     }
 
-    public class Name
+    public class Name : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
         public readonly string engName; 
         public readonly string japName;
-        public string Text { get { return japName + "(" + engName + ")"; } }
+        public static int option = 0;
+  
+        public string Text
+        {
+            get
+            {
+                if (option == 0)
+                    return japName;
+                if (option == 1)
+                    return engName;
+                return japName + "(" + engName + ")";
+            }
+        }
         
+
+
         public Name(string engName, string japName)
         {
             this.engName = engName;
@@ -515,6 +561,12 @@ namespace voiceduck
         {
             Console.WriteLine(engName + " / " + japName);
         }
-        
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+                handler(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

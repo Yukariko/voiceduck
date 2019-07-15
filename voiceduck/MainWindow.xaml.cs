@@ -41,14 +41,17 @@ namespace voiceduck
             loadingImage.UriSource = new Uri(System.IO.Directory.GetCurrentDirectory() + @"\img\loading.jpg");
             loadingImage.EndInit();
 
+            VoiceListBox.SelectionMode = SelectionMode.Extended;
 
-
+            NameOption.SelectedValue = voiceduck.Name.option;
         }
 
 
         async void Run(int id, string nickname = "", bool update = false)
         {
+            
             Voice voice = await _db.GetVoice(id);
+            
             if (voice != null)
             {
                 if (nickname != "")
@@ -58,6 +61,7 @@ namespace voiceduck
                     _db.Update();
                 VoiceListBox.Items.Add(voice);
             }
+            
         }
 
         private void VoiceListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -65,6 +69,7 @@ namespace voiceduck
             Voice voice = (Voice)VoiceListBox.SelectedItem;
             if (voice == null)
                 return;
+            VNDB.viewMode = "one";
             VNListBox.ItemsSource = voice.vns;
         }
 
@@ -77,7 +82,7 @@ namespace voiceduck
             {
                 vn.Color = "green";
                 CharacterInfoListBox.Items.Clear();
-                CharacterInfoListBox.Items.Add(vn.characters[0].name.Text);
+                CharacterInfoListBox.Items.Add(vn.characters[0].name);
                 CharacterImage.Source = loadingImage;
                 CharacterImage.Source = await _db.GetCharacterImage(vn.id, vn.characters[0].id);
                 
@@ -185,6 +190,68 @@ namespace voiceduck
                 VoiceListBox.Items.Remove(voice);
                 _db.Update();
             }
+            else if (e.Key == Key.Enter)
+            {
+                System.Collections.IList voices = VoiceListBox.SelectedItems;
+                if (voices == null || voices.Count <= 1)
+                    return;
+
+                Dictionary<int, Tuple<int, VN>> overlapedVns = new Dictionary<int, Tuple<int, VN>>();
+
+                bool first = true;
+
+                foreach (Voice voice in voices)
+                {
+
+                    if (first)
+                    {
+                        first = false;
+                        foreach (var vn in voice.vns)
+                            overlapedVns[vn.id] = new Tuple<int, VN>(1, vn);
+                    }
+                    else
+                    {
+                        foreach (var vn in voice.vns)
+                            if (overlapedVns.ContainsKey(vn.id))
+                                overlapedVns[vn.id] = new Tuple<int, VN>(overlapedVns[vn.id].Item1 + 1, vn);
+                    }
+
+                }
+
+                List<VN> vns = new List<VN>();
+
+                foreach (var overlapedVn in overlapedVns)
+                    if (overlapedVn.Value.Item1 == voices.Count)
+                        vns.Add(overlapedVn.Value.Item2);
+
+                VNDB.viewMode = "more";
+                VNListBox.ItemsSource = vns;
+            }
+        }
+
+
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var selectedTag = ((ComboBoxItem)NameOption.SelectedItem).Tag.ToString();
+
+            int option;
+            if (int.TryParse(selectedTag, out option))
+            {
+                voiceduck.Name.option = option;
+                if (VNListBox != null)
+                {
+                    VN vn = (VN)VNListBox.SelectedItem;
+                    var temp = VNListBox.ItemsSource;
+                    VNListBox.ItemsSource = null;
+                    VNListBox.ItemsSource = temp;
+                    if (vn != null)
+                    {
+                        VNListBox.SelectedItem = vn;
+                    }
+                }
+                _db.Update();
+            }
+            
         }
     }
 }
