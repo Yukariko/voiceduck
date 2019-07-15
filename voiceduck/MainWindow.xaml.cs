@@ -63,6 +63,8 @@ namespace voiceduck
         private void VoiceListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Voice voice = (Voice)VoiceListBox.SelectedItem;
+            if (voice == null)
+                return;
             VNListBox.ItemsSource = voice.vns;
         }
 
@@ -159,8 +161,30 @@ namespace voiceduck
             if (character == null)
                 return;
             if (character.voice == null)
+            {
+                MessageBox.Show("성우가 없는 캐릭터입니다.", "안내", MessageBoxButton.OK);
                 return;
+            }
+            if (VNDB.voices.ContainsKey(character.voice.id))
+            {
+                MessageBox.Show("이미 등록된 성우입니다.", "안내", MessageBoxButton.OK);
+                return;
+            }
+            
             Run(character.voice.id, "", true);
+        }
+
+        private void VoiceListBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Delete)
+            {
+                Voice voice = (Voice)VoiceListBox.SelectedItem;
+                if (voice == null)
+                    return;
+                VNDB.voices.Remove(voice.id);
+                VoiceListBox.Items.Remove(voice);
+                _db.Update();
+            }
         }
     }
 }

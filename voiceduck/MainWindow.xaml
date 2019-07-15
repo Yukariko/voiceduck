@@ -35,7 +35,7 @@
                 <TextBox Name="FindVoiceBox" Grid.Column="0" Grid.Row="1" KeyDown="FindVoiceBox_KeyDown">
 
                 </TextBox>
-                <ListBox Name="VoiceListBox" Grid.Column="0" Grid.Row="2" Grid.RowSpan="2" SelectionChanged="VoiceListBox_SelectionChanged" MouseDoubleClick="VoiceListBox_MouseDoubleClick">
+                <ListBox Name="VoiceListBox" Grid.Column="0" Grid.Row="2" Grid.RowSpan="2" SelectionChanged="VoiceListBox_SelectionChanged" MouseDoubleClick="VoiceListBox_MouseDoubleClick" KeyDown="VoiceListBox_KeyDown">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Nickname}" />
